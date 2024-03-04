@@ -1,8 +1,11 @@
-using CompanyEmployees.Extensions;
-using Contracts;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using NLog;
+using CompanyEmployees;
+using CompanyEmployees.Extensions;
+using Contracts;
+using ActionFilters;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,14 +30,24 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     options.SuppressModelStateInvalidFilter = true;
 });
 
+// Register action filters
+builder.Services.AddScoped<ValidationFilterAttribute>();
+
+
 builder.Services.AddControllers(config =>
 {
+    // Add Json formatter configuration for PATCH requests
+    config.InputFormatters.Insert(0, JsonPatchConfiguration.GetJsonPatchInputFormatter());
+
     // content negotiation
-    //config.RespectBrowserAcceptHeader = true; // respect Accept header from client
-    //config.ReturnHttpNotAcceptable = true; // 406 response for unsupported media types
+    config.RespectBrowserAcceptHeader = true; // respect Accept header from client
+
+    config.ReturnHttpNotAcceptable = true; // 406 response for unsupported media types
+
 }).AddXmlDataContractSerializerFormatters() // support xml formatter
     .AddCustomCsvFormatter()
     .AddApplicationPart(typeof(CompanyEmployees.Presentation.AssemblyReference).Assembly);
+
 
 
 /// <summary>
