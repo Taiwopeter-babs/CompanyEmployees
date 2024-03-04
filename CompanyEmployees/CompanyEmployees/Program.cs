@@ -5,6 +5,8 @@ using CompanyEmployees;
 using CompanyEmployees.Extensions;
 using Contracts;
 using ActionFilters;
+using Shared.DataTransferObjects;
+using Service.DataShaping;
 
 
 
@@ -32,6 +34,9 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 // Register action filters
 builder.Services.AddScoped<ValidationFilterAttribute>();
+
+// Register Data shaper
+builder.Services.AddScoped<IDataShaper<EmployeeDto>, DataShaper<EmployeeDto>>();
 
 
 builder.Services.AddControllers(config =>
