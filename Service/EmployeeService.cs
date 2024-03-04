@@ -5,6 +5,7 @@ using Shared.DataTransferObjects;
 using Entities.Exceptions;
 using Entities;
 using Shared.RequestFeatures;
+using System.Dynamic;
 
 namespace Service
 {
@@ -13,16 +14,18 @@ namespace Service
         private readonly IRepositoryManager _repository;
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
+        private readonly IDataShaper<EmployeeDto> _dataShaper;
 
         public EmployeeService(IRepositoryManager repository, ILoggerManager logger,
-            IMapper mapper)
+            IMapper mapper, IDataShaper<EmployeeDto> dataShaper)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
+            _dataShaper = dataShaper;
         }
 
-        public async Task<(IEnumerable<EmployeeDto> employees, PageMetadata metadata)>
+        public async Task<(IEnumerable<ExpandoObject> employees, PageMetadata metadata)>
             GetEmployeesAsync(
             Guid companyId, EmployeeParameters employeeParams, bool trackChanges)
         {
@@ -35,7 +38,10 @@ namespace Service
 
             var employeesDto = _mapper.Map<IEnumerable<EmployeeDto>>(employeesWithPageMetadata);
 
-            return (employees: employeesDto, metadata: employeesWithPageMetadata.PageMetadata);
+            var shapedData = _dataShaper.ShapeData(employeesDto,
+                employeeParams.Fields);
+
+            return (employees: shapedData, metadata: employeesWithPageMetadata.PageMetadata);
         }
 
         public async Task<EmployeeDto> GetEmployeeAsync(Guid companyId, Guid id, bool trackChanges)
